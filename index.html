@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Application Tracker - Portofolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans p-4 md:p-8">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Job Application Tracker</h1>
+        <p class="text-slate-500 text-sm">Dashboard Pemantauan & Manajemen Lamaran Kerja</p>
+      </div>
+      <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full border border-indigo-200">Portofolio Showcase</span>
+    </header>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+        <p class="text-xs text-slate-500 font-medium">Total Melamar</p>
+        <p id="statTotal" class="text-2xl font-bold text-slate-800">0</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+        <p class="text-xs text-amber-600 font-medium">Proses / Review</p>
+        <p id="statPending" class="text-2xl font-bold text-amber-600">0</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+        <p class="text-xs text-blue-600 font-medium">Interview</p>
+        <p id="statInterview" class="text-2xl font-bold text-blue-600">0</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+        <p class="text-xs text-emerald-600 font-medium">Diterima</p>
+        <p id="statAccepted" class="text-2xl font-bold text-emerald-600">0</p>
+      </div>
+    </div>
+
+    <!-- Form Input & Table Container -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Form Input -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit">
+        <h2 class="text-lg font-bold text-slate-900 mb-4">Tambah Lamaran Baru</h2>
+        <form id="jobForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Perusahaan</label>
+            <input type="text" id="company" required placeholder="Contoh: PT Digital Nusantara" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Posisi / Jabatan</label>
+            <input type="text" id="role" required placeholder="Contoh: Admin Operasional / Frontend Dev" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Melamar</label>
+            <input type="date" id="date" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+            <select id="status" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Terkirim">Terkirim</option>
+              <option value="Interview">Interview</option>
+              <option value="Diterima">Diterima</option>
+              <option value="Ditolak">Ditolak</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan</label>
+            <textarea id="notes" placeholder="Catatan tambahan..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 rows="2""></textarea>
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-all shadow-sm">
+            + Simpan Lamaran
+          </button>
+        </form>
+      </div>
+
+      <!-- Tabel Data -->
+      <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <h2 class="text-lg font-bold text-slate-900 mb-4">Daftar Lamaran Kerja</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="p-3">Perusahaan & Posisi</th>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="jobTableBody" class="divide-y divide-slate-100">
+              <!-- Data dimasukkan via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let jobs = JSON.parse(localStorage.getItem('job_tracker_data')) || [];
+
+    const form = document.getElementById('jobForm');
+    const tableBody = document.getElementById('jobTableBody');
+
+    function updateStats() {
+      document.getElementById('statTotal').innerText = jobs.length;
+      document.getElementById('statPending').innerText = jobs.filter(j => j.status === 'Terkirim').length;
+      document.getElementById('statInterview').innerText = jobs.filter(j => j.status === 'Interview').length;
+      document.getElementById('statAccepted').innerText = jobs.filter(j => j.status === 'Diterima').length;
+    }
+
+    function renderJobs() {
+      tableBody.innerHTML = '';
+      if (jobs.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Belum ada data lamaran. Tambahkan di form sebelah kiri.</td></tr>`;
+        updateStats();
+        return;
+      }
+
+      jobs.forEach((job, index) => {
+        let badgeColor = 'bg-slate-100 text-slate-700';
+        if (job.status === 'Terkirim') badgeColor = 'bg-amber-100 text-amber-800';
+        if (job.status === 'Interview') badgeColor = 'bg-blue-100 text-blue-800';
+        if (job.status === 'Diterima') badgeColor = 'bg-emerald-100 text-emerald-800';
+        if (job.status === 'Ditolak') badgeColor = 'bg-rose-100 text-rose-800';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors';
+        tr.innerHTML = `
+          <td class="p-3">
+            <div class="font-bold text-slate-900">${job.company}</div>
+            <div class="text-xs text-slate-500">${job.role}</div>
+            ${job.notes ? `<div class="text-xs text-slate-400 italic mt-0.5">${job.notes}</div>` : ''}
+          </td>
+          <td class="p-3 text-xs text-slate-600">${job.date}</td>
+          <td class="p-3">
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${badgeColor}">${job.status}</span>
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="deleteJob(${index})" class="text-xs text-rose-600 hover:text-rose-800 font-medium">Hapus</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      updateStats();
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newJob = {
+        company: document.getElementById('company').value,
+        role: document.getElementById('role').value,
+        date: document.getElementById('date').value,
+        status: document.getElementById('status').value,
+        notes: document.getElementById('notes').value
+      };
+
+      jobs.push(newJob);
+      localStorage.setItem('job_tracker_data', JSON.stringify(jobs));
+      form.reset();
+      renderJobs();
+    });
+
+    function deleteJob(index) {
+      jobs.splice(index, 1);
+      localStorage.setItem('job_tracker_data', JSON.stringify(jobs));
+      renderJobs();
+    }
+
+    // Initial render
+    renderJobs();
+  </script>
+</body>
+</html>
